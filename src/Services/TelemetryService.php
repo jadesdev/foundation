@@ -141,9 +141,9 @@ class TelemetryService
         try {
             // For development: simulate validation by checking if access key exists
             $result = false;
-            if (!empty($this->accessKey) && strlen($this->accessKey) > 8) {
+            if (!empty($this->accessKey)) {
                 $result = $data;
-            };
+            }
 
             // Store successful validation time if valid
             if ($result) {
