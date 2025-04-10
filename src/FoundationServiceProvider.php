@@ -25,12 +25,6 @@ class FoundationServiceProvider extends ServiceProvider
             return new TelemetryService();
         });
 
-        // Register the main service
-        $this->app->singleton('foundation', function ($app) {
-            return new FoundationManager(
-                $app['foundation.telemetry']
-            );
-        });
     }
 
     /**
@@ -44,6 +38,8 @@ class FoundationServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../config/foundation.php' => config_path('foundation.php'),
         ], 'foundation-config');
+
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'foundation');
 
         // Initialize the telemetry service (license check)
         if (!$this->app->runningInConsole()) {
