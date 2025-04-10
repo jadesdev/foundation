@@ -1,0 +1,40 @@
+{
+    "name": "jadesdev/foundation",
+    "description": "Foundation toolkit for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jadesdev",
+            "email": "info@jadesdev.com.ng"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^8.0|^9.0|^10.0",
+        "illuminate/http": "^8.0|^9.0|^10.0",
+        "illuminate/database": "^8.0|^9.0|^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jadesdev\\Foundation\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jadesdev\\Foundation\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jadesdev\\Foundation\\FoundationServiceProvider"
+            ],
+            "aliases": {
+                "Foundation": "Jadesdev\\Foundation\\Facades\\Foundation"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
