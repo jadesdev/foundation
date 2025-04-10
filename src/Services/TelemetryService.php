@@ -39,9 +39,10 @@ class TelemetryService
      * @param array $config
      */
     public function __construct()
+    
     {
-        $this->accessKey = $accessKey ?? '1234';
-        $this->apiEndpoint = $apiEndpoint ?? 'https://api.jadesdev.com/license/validate';
+        $this->accessKey = '1234';
+        $this->apiEndpoint =  'https://api.jadesdev.com/license/validate';
         $this->cachePrefix = 'foundationTelemetry_';
     }
 
