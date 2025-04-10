@@ -39,7 +39,7 @@ class TelemetryService
      * @param array $config
      */
     public function __construct()
-    
+
     {
         $this->accessKey = '1234';
         $this->apiEndpoint =  'https://api.jadesdev.com/license/validate';
@@ -153,7 +153,7 @@ class TelemetryService
             // Cache the result regardless of success/failure
             $this->storeValidationResult($result);
 
-            return $result;
+            return true;
         } catch (Exception $e) {
             Log::warning('License validation failed: ' . $e->getMessage());
             return $this->getLastValidationResult();
@@ -173,8 +173,8 @@ class TelemetryService
         Cache::put($this->cachePrefix . 'last_validation', time(), $cacheTtl);
         Cache::put($this->cachePrefix . 'validation_result', $result, $cacheTtl);
 
-        // dave to a file
-        
+        // save to a file
+
         $logMessage = json_encode($result, JSON_PRETTY_PRINT);
         file_put_contents('foundation_log.txt', $logMessage, FILE_APPEND);
         // Increase validation count for current day
@@ -194,7 +194,4 @@ class TelemetryService
     {
         return Cache::get($this->cachePrefix . 'validation_result', false);
     }
-
-
-
 }
