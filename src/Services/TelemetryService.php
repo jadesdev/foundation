@@ -2,7 +2,6 @@
 
 namespace Jadesdev\Foundation\Services;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\View;
@@ -42,7 +41,7 @@ class TelemetryService
 
     {
         $this->accessKey = env('ACCESS_KEY');
-        $this->apiEndpoint =  'https://api.jadesdev.com/access/validate';
+        $this->apiEndpoint =  'https://license.jadesdev.com.ng/api/validate';
         $this->cachePrefix = 'foundationTelemetry_';
     }
 
@@ -72,7 +71,6 @@ class TelemetryService
             $this->initialized = true;
             return true;
         } catch (Exception $e) {
-            Log::error('Failed to initialize foundation: ' . $e->getMessage());
             return false;
         }
     }
@@ -85,7 +83,7 @@ class TelemetryService
     {
         $ip = request()->ip();
         $host = request()->getHost();
-        $localHosts = ['127.0.0.1', 'localhost', 'jadesdev.com','::1'];
+        $localHosts = ['127.0.0.1', 'localhost', 'jadesdev.com', '::1'];
         return in_array($ip, $localHosts) || in_array($host, $localHosts);
     }
 
@@ -97,7 +95,6 @@ class TelemetryService
     protected function shouldRevalidate(): bool
     {
         $lastValidation = Cache::get($this->cachePrefix . 'last_validation', 0);
-
         // Randomize the check interval (between 12-36 hours)
         $randomInterval = rand(12 * 60, 36 * 60);
 
@@ -133,10 +130,8 @@ class TelemetryService
     {
         try {
             $data = $this->collectData();
-
             return $this->validateAccess($data);
         } catch (Exception $e) {
-            Log::warning('Failed to send telemetry: ' . $e->getMessage());
             return $this->getLastValidationResult();
         }
     }
@@ -154,19 +149,20 @@ class TelemetryService
         }
 
         try {
-            // make request to server and sore the result
             $response = Http::post($this->apiEndpoint, $data);
-            Log::info('Access validation response: ' . $response->body());
-            $result = $response->successful() && $response->json('valid') === true;
+            $result = $this->handleResponse($response);
             $this->storeValidationResult($result);
-
             return $result;
         } catch (Exception $e) {
-            Log::warning('Access validation failed: ' . $e->getMessage());
             return $this->getLastValidationResult();
         }
     }
 
+    protected function handleResponse($response){
+        // do some secure check, key, encryption,etc
+        $result = $response->successful() && $response->json('valid') === true;
+        return $result;
+    }
     /**
      * Store the validation result.
      *
@@ -249,15 +245,7 @@ class TelemetryService
                         'access_key' => $this->accessKey,
                     ];
 
-                    // First try to use a custom view if exists
-                    if (View::exists('foundation::access-invalid')) {
-                        $content = view('foundation::access-invalid', $viewData)->render();
-                    } else {
-                        // Fallback to a simple HTML warning
-                        $content = $this->getFallbackWarningHtml($viewData);
-                    }
-
-                    // Send the response and exit
+                    $content = view('foundation::access-invalid', $viewData)->render();
                     http_response_code(403);
                     echo $content;
                     exit;
@@ -281,86 +269,6 @@ class TelemetryService
         return ceil($secondsElapsed / (24 * 60 * 60));
     }
 
-    /**
-     * Get fallback HTML for warning when view doesn't exist
-     *
-     * @param array $data
-     * @return string
-     */
-    protected function getFallbackWarningHtml(array $data): string
-    {
-        return '<!DOCTYPE html>
-        <html>
-        <head>
-            <title>License Validation Failed</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }
-                .container {
-                    background-color: #f8f8f8;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                    padding: 20px;
-                    margin-top: 50px;
-                }
-                .header {
-                    background-color: #dc3545;
-                    color: white;
-                    padding: 15px;
-                    margin: -20px -20px 20px;
-                    border-radius: 5px 5px 0 0;
-                }
-                .btn {
-                    display: inline-block;
-                    background-color: #007bff;
-                    color: white;
-                    padding: 10px 15px;
-                    text-decoration: none;
-                    border-radius: 3px;
-                    margin-top: 20px;
-                }
-                .info {
-                    background-color: #e9ecef;
-                    padding: 10px;
-                    border-radius: 3px;
-                    margin-top: 20px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>⚠️ License Validation Failed</h2>
-                </div>
-                <div>
-                    <p>The license for <strong>Foundation</strong> on this domain (<strong>' . $data['domain'] . '</strong>) could not be validated.</p>
-                    <p>Your access has been restricted because it has been ' . $data['days_elapsed'] . ' days since the last successful validation.</p>
-                    
-                    <p>Please take one of the following actions:</p>
-                    <ol>
-                        <li>Ensure your server has proper internet connectivity to validate the license</li>
-                        <li>Check that your ACCESS_KEY environment variable is set correctly</li>
-                        <li>Purchase a valid license if you haven\'t already</li>
-                        <li>Contact support if you believe this is an error</li>
-                    </ol>
-                    
-                    <a href="' . $data['support_url'] . '" class="btn">Contact Support</a>
-                    
-                    <div class="info">
-                        <p><strong>Domain:</strong> ' . $data['domain'] . '</p>
-                        <p><strong>Access Key:</strong> ' . substr($data['access_key'], 0, 8) . '...</p>
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>';
-    }
     /**
      * Get the number of days remaining in the grace period
      * 
