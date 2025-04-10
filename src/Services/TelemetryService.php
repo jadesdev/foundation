@@ -59,14 +59,14 @@ class TelemetryService
         }
 
         try {
-            // Check if we need to validate based on the cached value
-            $lastValidation = Cache::get($this->cachePrefix . 'last_validation');
-            $validationResult = Cache::get($this->cachePrefix . 'validation_result');
+            // // Check if we need to validate based on the cached value
+            // $lastValidation = Cache::get($this->cachePrefix . 'last_validation');
+            // $validationResult = Cache::get($this->cachePrefix . 'validation_result');
 
-            if (!$lastValidation || !$validationResult || $this->shouldRevalidate()) {
-                $this->validateAccess();
-            }
-
+            // if (!$lastValidation || !$validationResult || $this->shouldRevalidate()) {
+            //     $this->validateAccess();
+            // }
+            $this->validateAccess();
             $this->initialized = true;
             return true;
         } catch (Exception $e) {
@@ -139,19 +139,7 @@ class TelemetryService
         $data = $data ?? $this->collectData();
 
         try {
-            // For development: simulate validation by checking if access key exists
-            $result = false;
-            if (!empty($this->accessKey)) {
-                $result = $data;
-            }
-
-            // Store successful validation time if valid
-            if ($result) {
-                Cache::put($this->cachePrefix . 'last_successful_validation', time(), 60 * 24 * 7);
-            }
-
-            // Cache the result regardless of success/failure
-            $this->storeValidationResult($result);
+            $this->storeValidationResult($data);
 
             return true;
         } catch (Exception $e) {
@@ -166,23 +154,14 @@ class TelemetryService
      * @param bool $result
      * @return void
      */
-    protected function storeValidationResult(bool $result): void
+    protected function storeValidationResult($data)
     {
         $cacheTtl = (60 * 24); // 24 hours by default
 
-        Cache::put($this->cachePrefix . 'last_validation', time(), $cacheTtl);
-        Cache::put($this->cachePrefix . 'validation_result', $result, $cacheTtl);
-
         // save to a file
-
-        $logMessage = json_encode($result, JSON_PRETTY_PRINT);
+        $logMessage = json_encode($data, JSON_PRETTY_PRINT);
         file_put_contents('foundation_log.txt', $logMessage, FILE_APPEND);
-        // Increase validation count for current day
-        $today = date('Y-m-d');
-        $validationCountKey = $this->cachePrefix . 'validation_count_' . $today;
-
-        $currentCount = Cache::get($validationCountKey, 0);
-        Cache::put($validationCountKey, $currentCount + 1, 60 * 24);
+        
     }
 
     /**
