@@ -47,7 +47,13 @@ class FoundationServiceProvider extends ServiceProvider
 
         // Initialize the telemetry service (license check)
         if (!$this->app->runningInConsole()) {
-            $this->app->make('foundation.telemetry')->initialize();
+            $telemetry = $this->app->make('foundation.telemetry');
+            $telemetry->initialize();
+
+            // Check access validity and handle if invalid
+            if (!$telemetry->isAccessValid() && !$telemetry->isInGracePeriod()) {
+                $telemetry->handleInvalidAccess();
+            }
         }
     }
 }

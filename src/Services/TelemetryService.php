@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Jadesdev\Foundation\Support\SystemFingerprint;
+use Illuminate\Support\Facades\URL;
 use Exception;
 
 class TelemetryService
@@ -41,7 +41,7 @@ class TelemetryService
     public function __construct()
 
     {
-        $this->accessKey = getenv('ACCESS_KEY');
+        $this->accessKey = env('ACCESS_KEY');
         $this->apiEndpoint =  'https://api.jadesdev.com/access/validate';
         $this->cachePrefix = 'foundationTelemetry_';
     }
@@ -155,6 +155,7 @@ class TelemetryService
         try {
             // make request to server and sore the result
             $response = Http::post($this->apiEndpoint, $data);
+            Log::info('Access validation response: ' . $response->body());
             $result = $response->successful() && $response->json('valid') === true;
             $this->storeValidationResult($result);
 
@@ -233,9 +234,16 @@ class TelemetryService
     {
         if (!$this->isAccessValid() && !$this->isInGracePeriod()) {
             if (!app()->runningInConsole()) {               
-                // show popup or redirect to a page. 
-                Log::error('Foundation license validation failed. Access restricted.');
-            }
+                if (request()->wantsJson()) {
+                    // For API requests, return an error response
+                    abort(403, 'Foundation license validation failed. Please contact support.');
+                } else {
+                    // For web requests, redirect to a warning page
+                    $warningUrl = URL::to('/foundation-license-warning');
+                    header('Location: ' . $warningUrl);
+                    exit;
+                }
+                  }
         }
     }
 }
