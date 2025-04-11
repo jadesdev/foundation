@@ -71,7 +71,7 @@ class TelemetryService
             $validationResult = Cache::get($this->cacheKey('validation_result'));
             // track grace period usage
             $this->trackGraceUsage();
-            
+
             if (!$lastValidation || !$validationResult || $this->shouldRevalidate()) {
                 $result = $this->validateAccess();
                 if (!$result && !$this->isInGracePeriod()) {
@@ -178,9 +178,31 @@ class TelemetryService
 
     protected function handleResponse($response)
     {
-        // do some secure check, key, encryption,etc
-        $result = $response->successful() && $response->json('valid') === true;
-        return $result;
+        if (!$response->successful()) {
+            return false;
+        }
+
+        $data = $response->json();
+
+        if (!isset($data['valid']) || !isset($data['signature']) || !isset($data['timestamp'])) {
+            return false;
+        }
+        // old response
+        if (abs(time() - $data['timestamp']) > 300) {
+            return false;
+        }
+
+        // 4. Verify signature
+        $expectedSignature = $this->generateSignature($data);
+        if (!hash_equals($expectedSignature, $data['signature'])) {
+            return false;
+        }
+
+        if (isset($data['expires_at'])) {
+            Cache::put($this->cacheKey('license_expiry'), $data['expires_at'], 30 * 24 * 60 * 60);
+        }
+
+        return (bool) $data['valid'];
     }
     /**
      * Store the validation result.
