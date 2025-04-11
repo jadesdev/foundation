@@ -20,11 +20,6 @@ class TelemetryService
     protected $apiEndpoint;
 
     /**
-     * @var bool
-     */
-    protected $initialized = false;
-
-    /**
      * @var string
      */
     protected $cachePrefix;
@@ -50,7 +45,8 @@ class TelemetryService
         return base64_decode("aHR0cHM6Ly9saWNlbnNlLmphZGVzZGV2LmNvbS5uZy9hcGkvdmFsaWRhdGU=");
     }
 
-    protected function getAccessKey(){
+    protected function getAccessKey()
+    {
         return env(base64_decode('QUNDRVNTX0tFWQ=='));
     }
 
@@ -67,10 +63,6 @@ class TelemetryService
      */
     public function initialize(): bool
     {
-        if ($this->initialized) {
-            return true;
-        }
-
         if ($this->isLocalRequest()) {
             return true;
         }
@@ -79,12 +71,15 @@ class TelemetryService
             $validationResult = Cache::get($this->cacheKey('validation_result'));
 
             if (!$lastValidation || !$validationResult || $this->shouldRevalidate()) {
-                $this->validateAccess();
+                $result = $this->validateAccess();
+                if (!$result && !$this->isInGracePeriod()) {
+                    $this->handleInvalidAccess();
+                    return false;
+                }
             }
-            $this->initialized = true;
-            return true;
+            return $this->getLastValidationResult();
         } catch (Exception $e) {
-            return false;
+            return $this->getLastValidationResult();
         }
     }
 
@@ -107,7 +102,7 @@ class TelemetryService
      */
     protected function shouldRevalidate(): bool
     {
-        $lastValidation = Cache::get($this->cacheKey('last_validation', 0));
+        $lastValidation = Cache::get($this->cacheKey('last_validation'), 0);
         // Randomize the check interval (between 2-6 hours)
         $randomInterval = rand(2 * 60 * 60, 6 * 60 * 60);
 
@@ -186,8 +181,8 @@ class TelemetryService
     protected function storeValidationResult(bool $result)
     {
         $cacheTtl = (60 * 1); // 24 hours by default
-        Cache::put($this->cacheKey('last_validation', time(), $cacheTtl));
-        Cache::put($this->cacheKey('validation_result', $result, $cacheTtl));
+        Cache::put($this->cacheKey('last_validation'), time(), $cacheTtl);
+        Cache::put($this->cacheKey('validation_result'), $result, $cacheTtl);
 
         // Increase validation count for current day
         $today = date('Y-m-d');
@@ -204,7 +199,7 @@ class TelemetryService
      */
     public function getLastValidationResult(): bool
     {
-        return Cache::get($this->cacheKey('validation_result', false));
+        return Cache::get($this->cacheKey('validation_result'), false);
     }
 
     /**
@@ -229,7 +224,7 @@ class TelemetryService
             return false;
         }
 
-        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation', 0));
+        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation'), 0);
 
         return (time() - $lastSuccess) < ($this->graceHours * 60 * 60);
     }
@@ -272,7 +267,7 @@ class TelemetryService
      */
     protected function getDaysElapsedSinceLastSuccess(): int
     {
-        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation', 0));
+        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation'), 0);
         if ($lastSuccess === 0) {
             return 999; // Never had a successful validation
         }
@@ -292,7 +287,7 @@ class TelemetryService
             return 0; // Not in grace period
         }
 
-        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation', 0));
+        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation'), 0);
         $secondsElapsed = time() - $lastSuccess;
         $secondsTotal = $this->graceHours * 60 * 60;
         $secondsRemaining = $secondsTotal - $secondsElapsed;
