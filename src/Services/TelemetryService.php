@@ -181,28 +181,43 @@ class TelemetryService
         if (!$response->successful()) {
             return false;
         }
-
+        $tee1 = base64_decode('dmFsaWQ=');
+        $tee2 = base64_decode('c2lnbmF0dXJl');
+        $tee3 = base64_decode('dGltZXN0YW1w');
         $data = $response->json();
 
-        if (!isset($data['valid']) || !isset($data['signature']) || !isset($data['timestamp'])) {
+        if (!isset($data[$tee1]) || !isset($data[$tee3])) {
             return false;
         }
         // old response
-        if (abs(time() - $data['timestamp']) > 300) {
+        if (abs(time() - $data[$tee3]) > 300) {
             return false;
         }
 
         // 4. Verify signature
+        $receivedSignature = $response->header($tee2);
+        if (!$receivedSignature) {
+            return false;
+        }
         $expectedSignature = $this->generateSignature($data);
-        if (!hash_equals($expectedSignature, $data['signature'])) {
+
+        if (!hash_equals($expectedSignature, $receivedSignature)) {
             return false;
         }
 
-        if (isset($data['expires_at'])) {
-            Cache::put($this->cacheKey('license_expiry'), $data['expires_at'], 30 * 24 * 60 * 60);
-        }
+        return (bool) $data[$tee1];
+    }
+    protected function generateSignature(array $data): string
+    {
+        $signatureData = $data;
+        $tee2 = base64_decode('c2lnbmF0dXJl');
+        unset($signatureData['signature']);
 
-        return (bool) $data['valid'];
+        ksort($signatureData);
+        $dataString = json_encode($signatureData);
+        $secret = hash('sha256', $this->accessKey . '_verification_key');
+
+        return hash_hmac('sha256', $dataString, $secret);
     }
     /**
      * Store the validation result.
