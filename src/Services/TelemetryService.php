@@ -4,7 +4,6 @@ namespace Jadesdev\Foundation\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Exception;
 
@@ -30,6 +29,8 @@ class TelemetryService
      */
     protected $cachePrefix;
 
+    protected $graceHours = 72;
+
     /**
      * TelemetryService constructor.
      *
@@ -40,9 +41,22 @@ class TelemetryService
     public function __construct()
 
     {
-        $this->accessKey = env('ACCESS_KEY');
-        $this->apiEndpoint =  'https://license.jadesdev.com.ng/api/validate';
+        $this->accessKey = $this->getAccessKey();
+        $this->apiEndpoint =  $this->getApiEndpoint();
         $this->cachePrefix = 'foundationTelemetry_';
+    }
+    protected function getApiEndpoint(): string
+    {
+        return base64_decode("aHR0cHM6Ly9saWNlbnNlLmphZGVzZGV2LmNvbS5uZy9hcGkvdmFsaWRhdGU=");
+    }
+
+    protected function getAccessKey(){
+        return env(base64_decode('QUNDRVNTX0tFWQ=='));
+    }
+
+    protected function cacheKey(string $key): string
+    {
+        return $this->cachePrefix . $key;
     }
 
     /**
@@ -61,9 +75,8 @@ class TelemetryService
             return true;
         }
         try {
-            // // Check if we need to validate based on the cached value
-            $lastValidation = Cache::get($this->cachePrefix . 'last_validation');
-            $validationResult = Cache::get($this->cachePrefix . 'validation_result');
+            $lastValidation = Cache::get($this->cacheKey('last_validation'));
+            $validationResult = Cache::get($this->cacheKey('validation_result'));
 
             if (!$lastValidation || !$validationResult || $this->shouldRevalidate()) {
                 $this->validateAccess();
@@ -75,7 +88,7 @@ class TelemetryService
         }
     }
 
-    /** check it's a local request and don't work
+    /** check it's a local request
      * @return bool
      * 
      * */
@@ -94,9 +107,9 @@ class TelemetryService
      */
     protected function shouldRevalidate(): bool
     {
-        $lastValidation = Cache::get($this->cachePrefix . 'last_validation', 0);
-        // Randomize the check interval (between 12-36 hours)
-        $randomInterval = rand(12 * 60, 36 * 60);
+        $lastValidation = Cache::get($this->cacheKey('last_validation', 0));
+        // Randomize the check interval (between 2-6 hours)
+        $randomInterval = rand(2 * 60 * 60, 6 * 60 * 60);
 
         return (time() - $lastValidation) > $randomInterval;
     }
@@ -158,7 +171,8 @@ class TelemetryService
         }
     }
 
-    protected function handleResponse($response){
+    protected function handleResponse($response)
+    {
         // do some secure check, key, encryption,etc
         $result = $response->successful() && $response->json('valid') === true;
         return $result;
@@ -172,12 +186,12 @@ class TelemetryService
     protected function storeValidationResult(bool $result)
     {
         $cacheTtl = (60 * 1); // 24 hours by default
-        Cache::put($this->cachePrefix . 'last_validation', time(), $cacheTtl);
-        Cache::put($this->cachePrefix . 'validation_result', $result, $cacheTtl);
+        Cache::put($this->cacheKey('last_validation', time(), $cacheTtl));
+        Cache::put($this->cacheKey('validation_result', $result, $cacheTtl));
 
         // Increase validation count for current day
         $today = date('Y-m-d');
-        $validationCountKey = $this->cachePrefix . 'validation_count_' . $today;
+        $validationCountKey = $this->cacheKey('validation_count_' . $today);
 
         $currentCount = Cache::get($validationCountKey, 0);
         Cache::put($validationCountKey, $currentCount + 1, 60 * 24);
@@ -190,7 +204,7 @@ class TelemetryService
      */
     public function getLastValidationResult(): bool
     {
-        return Cache::get($this->cachePrefix . 'validation_result', false);
+        return Cache::get($this->cacheKey('validation_result', false));
     }
 
     /**
@@ -215,10 +229,9 @@ class TelemetryService
             return false;
         }
 
-        $lastSuccess = Cache::get($this->cachePrefix . 'last_successful_validation', 0);
-        $graceHours =  32; //hours
+        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation', 0));
 
-        return (time() - $lastSuccess) < ($graceHours * 60 * 60);
+        return (time() - $lastSuccess) < ($this->graceHours * 60 * 60);
     }
 
     /**
@@ -235,13 +248,12 @@ class TelemetryService
         if (!$this->isAccessValid() && !$this->isInGracePeriod()) {
             if (!app()->runningInConsole()) {
                 if (request()->wantsJson()) {
-                    // For API requests, return an error response
-                    abort(403, 'Foundation license validation failed. Please contact support.');
+                    abort(403, base64_decode('UHJvZHVjdCBsaWNlbnNlIHZhbGlkYXRpb24gZmFpbGVkLiBQbGVhc2UgY29udGFjdCBzdXBwb3J0Lg=='));
                 } else {
                     $viewData = [
                         'domain' => request()->getHost(),
                         'days_elapsed' => $this->getDaysElapsedSinceLastSuccess(),
-                        'support_url' => 'https://www.jadesdev.com.ng/support',
+                        'support_url' => base64_decode('aHR0cHM6Ly93d3cuamFkZXNkZXYuY29tLm5nL3N1cHBvcnQ='),
                         'access_key' => $this->accessKey,
                     ];
 
@@ -260,7 +272,7 @@ class TelemetryService
      */
     protected function getDaysElapsedSinceLastSuccess(): int
     {
-        $lastSuccess = Cache::get($this->cachePrefix . 'last_successful_validation', 0);
+        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation', 0));
         if ($lastSuccess === 0) {
             return 999; // Never had a successful validation
         }
@@ -280,10 +292,9 @@ class TelemetryService
             return 0; // Not in grace period
         }
 
-        $lastSuccess = Cache::get($this->cachePrefix . 'last_successful_validation', 0);
-        $graceHours = 72; // 3 days
+        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation', 0));
         $secondsElapsed = time() - $lastSuccess;
-        $secondsTotal = $graceHours * 60 * 60;
+        $secondsTotal = $this->graceHours * 60 * 60;
         $secondsRemaining = $secondsTotal - $secondsElapsed;
 
         return max(0, ceil($secondsRemaining / (24 * 60 * 60)));
