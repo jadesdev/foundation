@@ -69,7 +69,9 @@ class TelemetryService
         try {
             $lastValidation = Cache::get($this->cacheKey('last_validation'));
             $validationResult = Cache::get($this->cacheKey('validation_result'));
-
+            // track grace period usage
+            $this->trackGraceUsage();
+            
             if (!$lastValidation || !$validationResult || $this->shouldRevalidate()) {
                 $result = $this->validateAccess();
                 if (!$result && !$this->isInGracePeriod()) {
@@ -87,7 +89,7 @@ class TelemetryService
      * @return bool
      * 
      * */
-    protected function isLocalRequest(): bool
+    public function isLocalRequest(): bool
     {
         $ip = request()->ip();
         $host = request()->getHost();
@@ -102,11 +104,8 @@ class TelemetryService
      */
     protected function shouldRevalidate(): bool
     {
-        $lastValidation = Cache::get($this->cacheKey('last_validation'), 0);
-        // Randomize the check interval (between 2-6 hours)
-        $randomInterval = rand(2 * 60 * 60, 6 * 60 * 60);
-
-        return (time() - $lastValidation) > $randomInterval;
+        $nextValidation = Cache::get($this->cacheKey('next_validation'), 0);
+        return time() >= $nextValidation;
     }
 
     /**
@@ -127,6 +126,17 @@ class TelemetryService
         ];
 
         return $data;
+    }
+
+    /**
+     * Force revalidation regardless of cache status.
+     * Useful when access key has been updated.
+     *
+     * @return bool
+     */
+    public function forceRevalidation(): bool
+    {
+        return $this->validateAccess();
     }
 
     /**
@@ -180,14 +190,26 @@ class TelemetryService
      */
     protected function storeValidationResult(bool $result)
     {
-        $cacheTtl = (60 * 1); // 24 hours by default
-        Cache::put($this->cacheKey('last_validation'), time(), $cacheTtl);
+        $now = time();
+
+        if ($result) {
+            $randomInterval = rand(2 * 60 * 60, 6 * 60 * 60);
+            $cacheTtl = 24 * 60 * 60;
+
+            Cache::put($this->cacheKey('last_successful_validation'), $now, 30 * 24 * 60 * 60);
+        } else {
+            $randomInterval = rand(1 * 60, 3 * 60);
+            $cacheTtl = 5 * 60;
+        }
+
+        // Store validation results 
+        Cache::put($this->cacheKey('last_validation'), $now, 30 * 24 * 60 * 60);
+        Cache::put($this->cacheKey('next_validation'), $now + $randomInterval, 30 * 24 * 60 * 60);
         Cache::put($this->cacheKey('validation_result'), $result, $cacheTtl);
 
         // Increase validation count for current day
         $today = date('Y-m-d');
         $validationCountKey = $this->cacheKey('validation_count_' . $today);
-
         $currentCount = Cache::get($validationCountKey, 0);
         Cache::put($validationCountKey, $currentCount + 1, 60 * 24);
     }
@@ -213,25 +235,8 @@ class TelemetryService
     }
 
     /**
-     * Check if we're in grace period after failed validation.
-     *
-     * @return bool
-     */
-    public function isInGracePeriod(): bool
-    {
-        // If validation is successful, we're not in grace period
-        if ($this->isAccessValid()) {
-            return false;
-        }
-
-        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation'), 0);
-
-        return (time() - $lastSuccess) < ($this->graceHours * 60 * 60);
-    }
-
-    /**
-     * Handle invalid license.
-     * This will be called when license validation fails and grace period expired.
+     * Handle invalid
+     * This will be called validation fails and grace period expired.
      *
      * @return void
      */
@@ -258,6 +263,45 @@ class TelemetryService
                     exit;
                 }
             }
+        }
+    }
+
+    /**
+     * Check if we're in grace period after failed validation.
+     *
+     * @return bool
+     */
+    public function isInGracePeriod(): bool
+    {
+        // If validation is successful, we're not in grace period
+        if ($this->isAccessValid()) {
+            return false;
+        }
+
+        $lastSuccess = Cache::get($this->cacheKey('last_successful_validation'), 0);
+        if ($lastSuccess === 0) {
+            return false;
+        }
+        $timeElapsed = time() - $lastSuccess;
+        $graceTimeLimit = $this->graceHours * 60 * 60;
+
+        $remaining = max(0, $graceTimeLimit - $timeElapsed);
+        Cache::put($this->cacheKey('grace_remaining'), $remaining, $graceTimeLimit);
+
+        return $timeElapsed < $graceTimeLimit;
+    }
+
+    /**
+     * Track usage during grace period
+     * 
+     * @return void
+     */
+    protected function trackGraceUsage(): void
+    {
+        if (!$this->isAccessValid() && $this->isInGracePeriod()) {
+            $key = $this->cacheKey('grace_usage_count');
+            $currentCount = Cache::get($key, 0);
+            Cache::put($key, $currentCount + 1, $this->graceHours * 60 * 60);
         }
     }
     /**
