@@ -1,185 +1,51 @@
 @php
-    $title = 'License Validation Failed';
-    $supportUrl = $support_url ?? 'https://www.jadesdev.com.ng/support';
-    $daysElapsed = $days_elapsed ?? 'multiple';
+    $temp1 = base64_decode('SW5hbGlkIFByb2R1Y3QgTGljZW5zZQ==');
+    $temp2 = base64_decode('aHR0cHM6Ly93d3cuamFkZXNkZXYuY29tLm5nL3N1cHBvcnQ=');
+    $domain = request()->getHost() ?? '';
+@endphp
+@php
+    echo base64_decode(
+        'CjwhRE9DVFlQRSBodG1sPgo8aHRtbCBsYW5nPSJlbiI+Cgo8aGVhZD4KICAgIDxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KICAgIDxtZXRhIG5hbWU9InZpZXdwb3J0IiBjb250ZW50PSJ3aWR0aD1kZXZpY2Utd2lkdGgsIGluaXRpYWwtc2NhbGU9MS4wIj4=',
+    );
 @endphp
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title }}</title>
-    <style>
-        :root {
-            --primary-color: #4A6CFA;
-            --danger-color: #DC3545;
-            --dark-color: #212529;
-            --light-color: #F8F9FA;
-            --gray-color: #6C757D;
-            --border-color: #DEE2E6;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: var(--dark-color);
-            background-color: #f5f7fb;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 800px;
-            width: 100%;
-            margin: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            background-color: white;
-            overflow: hidden;
-        }
-        
-        .header {
-            background-color: var(--danger-color);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .info-box {
-            background-color: #e9ecef;
-            border-radius: 5px;
-            padding: 15px;
-            margin-top: 25px;
-        }
-        
-        .action-box {
-            background-color: #f8f9fa;
-            border-left: 4px solid var(--primary-color);
-            padding: 15px;
-            margin: 25px 0;
-        }
-        
-        .btn {
-            display: inline-block;
-            background-color: var(--primary-color);
-            color: white;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-        
-        .btn:hover {
-            background-color: #3A5CDA;
-        }
-        
-        h2 {
-            margin-top: 0;
-        }
-        
-        .text-danger {
-            color: var(--danger-color);
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: var(--gray-color);
-            border-top: 1px solid var(--border-color);
-            background-color: #f8f9fa;
-        }
-        
-        .steps {
-            list-style-type: none;
-            padding: 0;
-            counter-reset: steps;
-        }
-        
-        .steps li {
-            position: relative;
-            padding-left: 50px;
-            margin-bottom: 20px;
-            counter-increment: steps;
-        }
-        
-        .steps li::before {
-            content: counter(steps);
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 30px;
-            height: 30px;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-    </style>
+<title>{{ $temp1 }}</title>
+@php
+    echo base64_decode(
+        'PHN0eWxlPgogICAgICAgIDpyb290IHsKICAgICAgICAgICAgLS1wcmltYXJ5LWNvbG9yOiAjNEE2Q0ZBOwogICAgICAgICAgICAtLWRhbmdlci1jb2xvcjogI0RDMzU0NTsKICAgICAgICAgICAgLS1kYXJrLWNvbG9yOiAjMjEyNTI5OwogICAgICAgICAgICAtLWxpZ2h0LWNvbG9yOiAjRjhGOUZBOwogICAgICAgICAgICAtLWdyYXktY29sb3I6ICM2Qzc1N0Q7CiAgICAgICAgICAgIC0tYm9yZGVyLWNvbG9yOiAjREVFMkU2OwogICAgICAgIH0KCiAgICAgICAgYm9keSB7CiAgICAgICAgICAgIGZvbnQtZmFtaWx5OiAnU2Vnb2UgVUknLCBUYWhvbWEsIEdlbmV2YSwgVmVyZGFuYSwgc2Fucy1zZXJpZjsKICAgICAgICAgICAgbGluZS1oZWlnaHQ6IDEuNjsKICAgICAgICAgICAgY29sb3I6IHZhcigtLWRhcmstY29sb3IpOwogICAgICAgICAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjZjVmN2ZiOwogICAgICAgICAgICBtYXJnaW46IDA7CiAgICAgICAgICAgIHBhZGRpbmc6IDA7CiAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7CiAgICAgICAgICAgIGp1c3RpZnktY29udGVudDogY2VudGVyOwogICAgICAgICAgICBhbGlnbi1pdGVtczogY2VudGVyOwogICAgICAgICAgICBtaW4taGVpZ2h0OiAxMDB2aDsKICAgICAgICB9CgogICAgICAgIC5jb250YWluZXIgewogICAgICAgICAgICBtYXgtd2lkdGg6IDgwMHB4OwogICAgICAgICAgICB3aWR0aDogMTAwJTsKICAgICAgICAgICAgbWFyZ2luOiAyMHB4OwogICAgICAgICAgICBib3JkZXItcmFkaXVzOiAxMHB4OwogICAgICAgICAgICBib3gtc2hhZG93OiAwIDRweCAyMHB4IHJnYmEoMCwgMCwgMCwgMC4wOCk7CiAgICAgICAgICAgIGJhY2tncm91bmQtY29sb3I6IHdoaXRlOwogICAgICAgICAgICBvdmVyZmxvdzogaGlkZGVuOwogICAgICAgIH0KCiAgICAgICAgLmhlYWRlciB7CiAgICAgICAgICAgIGJhY2tncm91bmQtY29sb3I6IHZhcigtLWRhbmdlci1jb2xvcik7CiAgICAgICAgICAgIGNvbG9yOiB3aGl0ZTsKICAgICAgICAgICAgcGFkZGluZzogMjBweDsKICAgICAgICAgICAgdGV4dC1hbGlnbjogY2VudGVyOwogICAgICAgIH0KCiAgICAgICAgLmNvbnRlbnQgewogICAgICAgICAgICBwYWRkaW5nOiAzMHB4OwogICAgICAgIH0KCgogICAgICAgIC5hY3Rpb24tYm94IHsKICAgICAgICAgICAgYmFja2dyb3VuZC1jb2xvcjogI2Y4ZjlmYTsKICAgICAgICAgICAgYm9yZGVyLWxlZnQ6IDRweCBzb2xpZCB2YXIoLS1wcmltYXJ5LWNvbG9yKTsKICAgICAgICAgICAgcGFkZGluZzogMTVweDsKICAgICAgICAgICAgbWFyZ2luOiAyNXB4IDA7CiAgICAgICAgfQoKICAgICAgICAuYnRuIHsKICAgICAgICAgICAgZGlzcGxheTogaW5saW5lLWJsb2NrOwogICAgICAgICAgICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1wcmltYXJ5LWNvbG9yKTsKICAgICAgICAgICAgY29sb3I6IHdoaXRlOwogICAgICAgICAgICB0ZXh0LWRlY29yYXRpb246IG5vbmU7CiAgICAgICAgICAgIHBhZGRpbmc6IDEycHggMjRweDsKICAgICAgICAgICAgYm9yZGVyLXJhZGl1czogNXB4OwogICAgICAgICAgICBmb250LXdlaWdodDogNTAwOwogICAgICAgICAgICB0cmFuc2l0aW9uOiBiYWNrZ3JvdW5kLWNvbG9yIDAuM3M7CiAgICAgICAgfQoKICAgICAgICAuYnRuOmhvdmVyIHsKICAgICAgICAgICAgYmFja2dyb3VuZC1jb2xvcjogIzNBNUNEQTsKICAgICAgICB9CgogICAgICAgIGgyIHsKICAgICAgICAgICAgbWFyZ2luLXRvcDogMDsKICAgICAgICB9CgogICAgICAgIC50ZXh0LWRhbmdlciB7CiAgICAgICAgICAgIGNvbG9yOiB2YXIoLS1kYW5nZXItY29sb3IpOwogICAgICAgIH0KCiAgICAgICAgLnN0ZXBzIHsKICAgICAgICAgICAgbGlzdC1zdHlsZS10eXBlOiBub25lOwogICAgICAgICAgICBwYWRkaW5nOiAwOwogICAgICAgICAgICBjb3VudGVyLXJlc2V0OiBzdGVwczsKICAgICAgICB9CgogICAgICAgIC5zdGVwcyBsaSB7CiAgICAgICAgICAgIHBvc2l0aW9uOiByZWxhdGl2ZTsKICAgICAgICAgICAgcGFkZGluZy1sZWZ0OiA1MHB4OwogICAgICAgICAgICBtYXJnaW4tYm90dG9tOiAyMHB4OwogICAgICAgICAgICBjb3VudGVyLWluY3JlbWVudDogc3RlcHM7CiAgICAgICAgfQoKICAgICAgICAuc3RlcHMgbGk6OmJlZm9yZSB7CiAgICAgICAgICAgIGNvbnRlbnQ6IGNvdW50ZXIoc3RlcHMpOwogICAgICAgICAgICBwb3NpdGlvbjogYWJzb2x1dGU7CiAgICAgICAgICAgIGxlZnQ6IDA7CiAgICAgICAgICAgIHRvcDogMDsKICAgICAgICAgICAgd2lkdGg6IDMwcHg7CiAgICAgICAgICAgIGhlaWdodDogMzBweDsKICAgICAgICAgICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tcHJpbWFyeS1jb2xvcik7CiAgICAgICAgICAgIGNvbG9yOiB3aGl0ZTsKICAgICAgICAgICAgYm9yZGVyLXJhZGl1czogNTAlOwogICAgICAgICAgICBkaXNwbGF5OiBmbGV4OwogICAgICAgICAgICBhbGlnbi1pdGVtczogY2VudGVyOwogICAgICAgICAgICBqdXN0aWZ5LWNvbnRlbnQ6IGNlbnRlcjsKICAgICAgICAgICAgZm9udC13ZWlnaHQ6IGJvbGQ7CiAgICAgICAgfQogICAgPC9zdHlsZT4=',
+    );
+@endphp
 </head>
+
 <body>
     <div class="container">
         <div class="header">
-            <h2>⚠️ License Validation Failed</h2>
+            <h2>⚠️ {{ $temp1 }}</h2>
         </div>
-        
         <div class="content">
-            <h3>Access Restricted</h3>
-            <p>
-                The license for <strong>Foundation</strong> on this domain (<strong>{{ $domain }}</strong>) 
-                could not be validated. Your access has been restricted because it has been 
-                <span class="text-danger">{{ $days_elapsed }}</span> days since the last successful validation.
-            </p>
-            
-            <div class="action-box">
-                <h4>How to Fix This Issue:</h4>
-                <ul class="steps">
-                    <li>
-                        <strong>Check your internet connection</strong><br>
-                        Ensure your server has proper connectivity to validate the license.
-                    </li>
-                    <li>
-                        <strong>Verify your ACCESS_KEY</strong><br>
-                        Make sure your <code>ACCESS_KEY</code> environment variable is set correctly.
-                    </li>
-                    <li>
-                        <strong>Check license status</strong><br>
-                        Verify your license is active and hasn't expired.
-                    </li>
-                    <li>
-                        <strong>Contact support</strong><br>
-                        If you continue experiencing issues, please reach out to our support team.
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="text-center" style="text-align: center; margin-top: 30px;">
-                <a href="{{ $supportUrl }}" class="btn">Contact Support</a>
-            </div>
-            
-            <div class="info-box">
-                <h4>Troubleshooting Information:</h4>
-                <p><strong>Domain:</strong> {{ $domain }}</p>
-                <p><strong>Access Key:</strong> {{ substr($access_key, 0, 8) }}...</p>
-                <p><strong>Days Since Last Validation:</strong> {{ $days_elapsed }}</p>
+
+            {!! base64_decode(
+                'PGgzPkFjY2VzcyBSZXN0cmljdGVkPC9oMz4KICAgICAgICAgICAgPHA+IFRvIHVzZSB0aGlzIHNjcmlwdCwgS2luZGx5IHB1cmNoYXNlIGZyb20gdGhlIHJpZ2h0IHNvdXJjZSBvciBwcm92aWRlIHlvdXIgbGljZW5zZSBjb2RlIG9uIHRoaXMgZG9tYWluLgogICAgICAgICAgICA8L3A+',
+            ) !!}
+            <p> <strong>{{ $domain }}</strong></p>
+
+            @php
+                echo base64_decode(
+                    'CiAgICAgICAgICAgIDxwPgogICAgICAgICAgICAgICAgRW5zdXJlIHlvdSBoYXZlIG5vdCByZWFjaCB0aGUgbWF4aW11bSBhbGxvd2VkIGRvbWFpbiBvbiB5b3VyIGxpY2Vuc2UgY29kZS4KICAgICAgICAgICAgPC9wPgogICAgICAgICAgICA8cD5FbnN1cmUgdGhhdCB0aGlzIGlzIGEgdmFsaWQgZG9tYWluIGZvciB5b3VyIGxpY2Vuc2UgY29kZS48L3A+',
+                );
+
+                echo base64_decode(
+                    'PGRpdiBjbGFzcz0iYWN0aW9uLWJveCI+CiAgICAgICAgICAgICAgICA8aDQ+SG93IHRvIEZpeCBUaGlzIElzc3VlOjwvaDQ+CiAgICAgICAgICAgICAgICA8dWwgY2xhc3M9InN0ZXBzIj4KICAgICAgICAgICAgICAgICAgICA8bGk+CiAgICAgICAgICAgICAgICAgICAgICAgIDxzdHJvbmc+VmVyaWZ5IHlvdXIgQUNDRVNTX0tFWTwvc3Ryb25nPjxicj4KICAgICAgICAgICAgICAgICAgICAgICAgTWFrZSBzdXJlIHlvdXIgPGNvZGU+QUNDRVNTX0tFWTwvY29kZT4gaXMgc2V0IGNvcnJlY3RseSBhbmQgaXMgdmFsaWQuCiAgICAgICAgICAgICAgICAgICAgPC9saT4KICAgICAgICAgICAgICAgICAgICA8bGk+CiAgICAgICAgICAgICAgICAgICAgICAgIDxzdHJvbmc+Q29udGFjdCBzdXBwb3J0PC9zdHJvbmc+PGJyPgogICAgICAgICAgICAgICAgICAgICAgICBJZiB5b3UgY29udGludWUgZXhwZXJpZW5jaW5nIGlzc3VlcywgcGxlYXNlIHJlYWNoIG91dCB0byBvdXIgc3VwcG9ydCB0ZWFtLgogICAgICAgICAgICAgICAgICAgIDwvbGk+CiAgICAgICAgICAgICAgICA8L3VsPgogICAgPC9kaXY+',
+                );
+            @endphp
+
+            <div
+                @php echo base64_decode('Y2xhc3M9InRleHQtY2VudGVyIiBzdHlsZT0idGV4dC1hbGlnbjogY2VudGVyOyBtYXJnaW4tdG9wOiAzMHB4OyI='); @endphp>
+                <a href="{{ $temp2 }}" class="btn">{{ base64_decode('Q29udGFjdCBTdXBwb3J0') }}</a>
             </div>
         </div>
-        
-        <div class="footer">
-            &copy; {{ date('Y') }} Jadesdev Foundation. All rights reserved.
-        </div>
+
     </div>
 </body>
+
 </html>

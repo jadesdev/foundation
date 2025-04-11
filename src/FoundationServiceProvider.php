@@ -41,15 +41,10 @@ class FoundationServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__.'/resources/views', 'foundation');
 
-        // Initialize the telemetry service (license check)
+        // Initialize the telemetry service
         if (!$this->app->runningInConsole()) {
             $telemetry = $this->app->make('foundation.telemetry');
-            $telemetry->initialize();
-
-            // Check access validity and handle if invalid
-            if (!$telemetry->isAccessValid() && !$telemetry->isInGracePeriod()) {
-                $telemetry->handleInvalidAccess();
-            }
+            $telemetry->initialize();            
         }
     }
 }
