@@ -284,9 +284,16 @@ class TelemetryService
         }
         if (!$this->isAccessValid() && !$this->isInGracePeriod()) {
             if (!app()->runningInConsole()) {
-                if (request()->wantsJson()) {
-                    abort(403, base64_decode('UHJvZHVjdCBsaWNlbnNlIHZhbGlkYXRpb24gZmFpbGVkLiBQbGVhc2UgY29udGFjdCBzdXBwb3J0Lg=='));
+                if ($this->requestWantsJson()) {
+                    header('Content-Type: application/json');
+                    http_response_code(403);
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => base64_decode('UHJvZHVjdCBsaWNlbnNlIHZhbGlkYXRpb24gZmFpbGVkLiBQbGVhc2UgY29udGFjdCBzdXBwb3J0Lg==')
+                    ]);
+                    exit;
                 } else {
+
                     $viewData = [
                         'domain' => request()->getHost(),
                         'days_elapsed' => $this->getDaysElapsedSinceLastSuccess(),
@@ -301,6 +308,15 @@ class TelemetryService
                 }
             }
         }
+    }
+
+    protected function requestWantsJson(): bool
+    {
+        $acceptsJson = str_contains(request()->header('Accept'), 'application/json');
+        $contentTypeJson = str_contains(request()->header('Content-Type'), 'application/json');
+        $isAjax = request()->ajax();
+
+        return $acceptsJson || $contentTypeJson || $isAjax;
     }
 
     /**
