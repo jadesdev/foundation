@@ -230,7 +230,7 @@ class TelemetryService
         $now = time();
 
         if ($result) {
-            $randomInterval = rand(2 * 60 * 60, 6 * 60 * 60);
+            $randomInterval = rand(8 * 60 * 60, 12 * 60 * 60);
             $cacheTtl = 24 * 60 * 60;
 
             Cache::put($this->cacheKey('last_successful_validation'), $now, 30 * 24 * 60 * 60);
